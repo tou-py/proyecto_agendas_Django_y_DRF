@@ -3,8 +3,13 @@ from django.contrib.auth.models import User
 
 
 class Especialista(models.Model):
+    """
+    Modelo de Especialista
+    """
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    nombre_completo = models.CharField(max_length=255)
+    nombres = models.CharField(max_length=255)
+    apellidos = models.CharField(max_length=255)
     fecha_nacimiento = models.DateField()
     correo_electronico = models.EmailField()
     numero_telefono = models.CharField(max_length=15)
@@ -15,13 +20,14 @@ class Especialista(models.Model):
 
 class Paciente(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    nombre_completo = models.CharField(max_length=255)
+    nombres = models.CharField(max_length=255)
+    apellidos = models.CharField(max_length=255)
     fecha_nacimiento = models.DateField()
     correo_electronico = models.EmailField()
     numero_telefono = models.CharField(max_length=15)
 
     def __str__(self):
-        return self.nombre_completo
+        return f"{self.nombres} {self.apellidos}"
 
 
 class Cita(models.Model):

@@ -10,30 +10,17 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
 
-class PacienteRegisterSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-
+class EspecialistaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Paciente
+        model = Especialista
         fields = [
-            "user",
-            "nombre_completo",
+            "id",
+            "nombres",
+            "apellidos",
             "fecha_nacimiento",
             "correo_electronico",
             "numero_telefono",
         ]
-
-    def create(self, validated_data):
-        user_data = validated_data.pop("user")
-        user = User.objects.create_user(**user_data)
-        paciente = Paciente.objects.create(user=user, **validated_data)
-        return paciente
-
-
-class EspecialistaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Especialista
-        fields = "__all__"
 
 
 class EspecialistaRegisterSerializer(serializers.ModelSerializer):
@@ -43,7 +30,8 @@ class EspecialistaRegisterSerializer(serializers.ModelSerializer):
         model = Especialista
         fields = [
             "user",
-            "nombre_completo",
+            "nombres",
+            "apellidos",
             "fecha_nacimiento",
             "correo_electronico",
             "numero_telefono",
@@ -77,13 +65,6 @@ class CitaSerializer(serializers.ModelSerializer):
         return data
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["username", "password", "email"]
-        extra_kwargs = {"password": {"write_only": True}}
-
-
 class PacienteRegisterSerializer(serializers.ModelSerializer):
     user = UserSerializer()
 
@@ -91,7 +72,8 @@ class PacienteRegisterSerializer(serializers.ModelSerializer):
         model = Paciente
         fields = [
             "user",
-            "nombre_completo",
+            "nombres",
+            "apellidos",
             "fecha_nacimiento",
             "correo_electronico",
             "numero_telefono",

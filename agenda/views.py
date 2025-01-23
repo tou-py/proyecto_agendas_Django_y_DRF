@@ -45,22 +45,18 @@ class EspecialistaRegisterView(generics.CreateAPIView):
         )
 
 
-class AprobarEspecialistaView(APIView):
+class AprobarEspecialistaView(generics.GenericAPIView):
     permission_classes = [permissions.IsAdminUser]
+    serializer_class = EspecialistaSerializer
 
     def post(self, request, user_id):
         try:
             user = User.objects.get(id=user_id)
             user.is_active = True
             user.save()
-            return Response(
-                {"message": "Cuenta de especialista aprobada"},
-                status=status.HTTP_200_OK,
-            )
+            return Response({'message': 'Cuenta de especialista aprobada'}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
-            return Response(
-                {"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class PacienteViewSet(viewsets.ModelViewSet):
