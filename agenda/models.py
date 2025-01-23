@@ -1,33 +1,64 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 
 
-class Especialista(models.Model):
-    """
-    Modelo de Especialista
-    """
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, nombres, apellidos, password=None, **extra_fields):
+        if not email:
+            raise ValueError("El correo electrónico es obligatorio")
+        email = self.normalize_email(email)
+        user = self.model(
+            email=email, nombres=nombres, apellidos=apellidos, **extra_fields
+        )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    def create_superuser(
+        self, email, nombres, apellidos, password=None, **extra_fields
+    ):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("El superusuario debe tener is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("El superusuario debe tener is_superuser=True.")
+
+        return self.create_user(email, nombres, apellidos, password, **extra_fields)
+
+
+class CustomUser(AbstractUser):
+    username = None
+    email = models.EmailField(unique=True)
     nombres = models.CharField(max_length=255)
     apellidos = models.CharField(max_length=255)
-    fecha_nacimiento = models.DateField()
-    correo_electronico = models.EmailField()
-    numero_telefono = models.CharField(max_length=15)
 
-    def __str__(self):
-        return self.nombre_completo
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["nombres", "apellidos"]
 
-
-class Paciente(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    nombres = models.CharField(max_length=255)
-    apellidos = models.CharField(max_length=255)
-    fecha_nacimiento = models.DateField()
-    correo_electronico = models.EmailField()
-    numero_telefono = models.CharField(max_length=15)
+    objects = CustomUserManager()  # Asignar el UserManager personalizado
 
     def __str__(self):
         return f"{self.nombres} {self.apellidos}"
+
+
+class Especialista(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    fecha_nacimiento = models.DateField()
+    numero_telefono = models.CharField(max_length=15)
+
+    def __str__(self):
+        return f"{self.user.nombres} {self.user.apellidos}"
+
+
+class Paciente(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    fecha_nacimiento = models.DateField()
+    numero_telefono = models.CharField(max_length=15)
+
+    def __str__(self):
+        return f"{self.user.nombres} {self.user.apellidos}"
 
 
 class Cita(models.Model):

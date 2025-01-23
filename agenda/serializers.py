@@ -1,12 +1,11 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from .models import Especialista, Paciente, Cita
+from .models import CustomUser, Especialista, Paciente, Cita
 
 
-class UserSerializer(serializers.ModelSerializer):
+class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ["username", "password", "email"]
+        model = CustomUser
+        fields = ["email", "password", "nombres", "apellidos"]
         extra_kwargs = {"password": {"write_only": True}}
 
 
@@ -24,22 +23,15 @@ class EspecialistaSerializer(serializers.ModelSerializer):
 
 
 class EspecialistaRegisterSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    user = CustomUserSerializer()
 
     class Meta:
         model = Especialista
-        fields = [
-            "user",
-            "nombres",
-            "apellidos",
-            "fecha_nacimiento",
-            "correo_electronico",
-            "numero_telefono",
-        ]
+        fields = ["user", "fecha_nacimiento", "numero_telefono"]
 
     def create(self, validated_data):
         user_data = validated_data.pop("user")
-        user = User.objects.create_user(
+        user = CustomUser.objects.create_user(
             **user_data, is_active=False
         )  # Cuenta inactiva hasta aprobación
         especialista = Especialista.objects.create(user=user, **validated_data)
@@ -66,21 +58,14 @@ class CitaSerializer(serializers.ModelSerializer):
 
 
 class PacienteRegisterSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    user = CustomUserSerializer()
 
     class Meta:
         model = Paciente
-        fields = [
-            "user",
-            "nombres",
-            "apellidos",
-            "fecha_nacimiento",
-            "correo_electronico",
-            "numero_telefono",
-        ]
+        fields = ["user", "fecha_nacimiento", "numero_telefono"]
 
     def create(self, validated_data):
         user_data = validated_data.pop("user")
-        user = User.objects.create_user(**user_data)
+        user = CustomUser.objects.create_user(**user_data)
         paciente = Paciente.objects.create(user=user, **validated_data)
         return paciente

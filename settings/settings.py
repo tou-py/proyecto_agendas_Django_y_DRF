@@ -31,6 +31,7 @@ DEBUG = env.bool("DEBUG", default=False)
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
+AUTH_USER_MODEL = "agenda.CustomUser"
 
 # Application definition
 
