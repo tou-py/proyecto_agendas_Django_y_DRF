@@ -4,6 +4,7 @@ from rest_framework import viewsets, status, permissions, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from .models import Especialista, Paciente, Cita
 from .serializers import (
@@ -13,6 +14,8 @@ from .serializers import (
     PacienteRegisterSerializer,
     EspecialistaRegisterSerializer,
 )
+
+User = get_user_model()  # Obtener el modelo de usuario personalizado
 
 logger = logging.getLogger("citas")  # Obtener el logger de la aplicación
 
@@ -45,18 +48,28 @@ class EspecialistaRegisterView(generics.CreateAPIView):
         )
 
 
-class AprobarEspecialistaView(generics.GenericAPIView):
+class AprobarEspecialistaView(APIView):
     permission_classes = [permissions.IsAdminUser]
-    serializer_class = EspecialistaSerializer
 
     def post(self, request, user_id):
         try:
+            # Obtener el usuario por su ID
             user = User.objects.get(id=user_id)
+
+            # Activar la cuenta del usuario
             user.is_active = True
             user.save()
-            return Response({'message': 'Cuenta de especialista aprobada'}, status=status.HTTP_200_OK)
+
+            # Devolver una respuesta exitosa
+            return Response(
+                {"message": "Cuenta de especialista aprobada"},
+                status=status.HTTP_200_OK,
+            )
         except User.DoesNotExist:
-            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+            # Si el usuario no existe, devolver un error
+            return Response(
+                {"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class PacienteViewSet(viewsets.ModelViewSet):
