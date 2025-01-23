@@ -11,6 +11,7 @@ from .serializers import (
     EspecialistaSerializer,
     PacienteSerializer,
     CitaSerializer,
+    CustomUserSerializer,
     PacienteRegisterSerializer,
     EspecialistaRegisterSerializer,
 )
@@ -50,23 +51,18 @@ class EspecialistaRegisterView(generics.CreateAPIView):
 
 class AprobarEspecialistaView(APIView):
     permission_classes = [permissions.IsAdminUser]
+    serializer_class = EspecialistaSerializer
 
     def post(self, request, user_id):
         try:
-            # Obtener el usuario por su ID
             user = User.objects.get(id=user_id)
-
-            # Activar la cuenta del usuario
             user.is_active = True
             user.save()
-
-            # Devolver una respuesta exitosa
             return Response(
                 {"message": "Cuenta de especialista aprobada"},
                 status=status.HTTP_200_OK,
             )
         except User.DoesNotExist:
-            # Si el usuario no existe, devolver un error
             return Response(
                 {"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND
             )
@@ -98,6 +94,21 @@ class PacienteRegisterView(generics.CreateAPIView):
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
+
+
+class UpdateUserView(generics.UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user  # Modifica solo el usuario autenticado
+
+
+class DeleteUserView(generics.DestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = [permissions.IsAdminUser]
 
 
 class CitaPagination(PageNumberPagination):

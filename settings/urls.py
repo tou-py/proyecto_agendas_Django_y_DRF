@@ -9,6 +9,8 @@ from agenda.views import (
     PacienteRegisterView,
     EspecialistaRegisterView,
     AprobarEspecialistaView,
+    UpdateUserView,
+    DeleteUserView,
 )
 
 # Rutas para Docs
@@ -38,6 +40,8 @@ urlpatterns = [
         AprobarEspecialistaView.as_view(),
         name="aprobar-especialista",
     ),
+    path("api/update-user/", UpdateUserView.as_view(), name="update-user"),
+    path("api/delete-user/<int:pk>/", DeleteUserView.as_view(), name="delete-user"),
     # rutas para autenticación
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

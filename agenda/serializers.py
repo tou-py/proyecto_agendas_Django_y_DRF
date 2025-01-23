@@ -5,19 +5,23 @@ from .models import CustomUser, Especialista, Paciente, Cita
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ["email", "password", "nombres", "apellidos"]
+        fields = ["email", "nombres", "apellidos"]
         extra_kwargs = {"password": {"write_only": True}}
 
 
 class EspecialistaSerializer(serializers.ModelSerializer):
+    nombres = serializers.CharField(source="user.nombres", read_only=True)
+    apellidos = serializers.CharField(source="user.apellidos", read_only=True)
+    email = serializers.CharField(source="user.email", read_only=True)
+
     class Meta:
         model = Especialista
         fields = [
             "id",
             "nombres",
             "apellidos",
+            "email",
             "fecha_nacimiento",
-            "correo_electronico",
             "numero_telefono",
         ]
 
