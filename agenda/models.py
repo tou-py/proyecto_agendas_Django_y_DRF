@@ -33,6 +33,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     nombres = models.CharField(max_length=255)
     apellidos = models.CharField(max_length=255)
+    password_reset_token = models.CharField(max_length=100, blank=True, null=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["nombres", "apellidos"]
@@ -76,4 +77,4 @@ class Cita(models.Model):
     tratamiento_culminado = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Cita {self.id} - {self.paciente.nombre_completo} con {self.especialista.nombre_completo}"
+        return f"Cita {self.id} - {self.paciente.user.nombres} {self.paciente.user.apellidos} con {self.especialista.user.nombres} {self.especialista.user.apellidos}"

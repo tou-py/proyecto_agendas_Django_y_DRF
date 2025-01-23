@@ -11,6 +11,8 @@ from agenda.views import (
     AprobarEspecialistaView,
     UpdateUserView,
     DeleteUserView,
+    PasswordResetRequestView,
+    PasswordResetConfirmView,
 )
 
 # Rutas para Docs
@@ -45,6 +47,15 @@ urlpatterns = [
     # rutas para autenticación
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    # rutas para recuperar contraseña
+    path(
+        "api/password-reset/", PasswordResetRequestView.as_view(), name="password-reset"
+    ),
+    path(
+        "api/password-reset-confirm/",
+        PasswordResetConfirmView.as_view(),
+        name="password-reset-confirm",
+    ),
     # Rutas para Docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(

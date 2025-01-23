@@ -9,6 +9,21 @@ class CustomUserSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
 
+class UpdateUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ["nombres", "apellidos", "email"]
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    new_password = serializers.CharField()
+
+
 class EspecialistaSerializer(serializers.ModelSerializer):
     nombres = serializers.CharField(source="user.nombres", read_only=True)
     apellidos = serializers.CharField(source="user.apellidos", read_only=True)
@@ -54,10 +69,11 @@ class CitaSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate(self, data):
-        if data["fecha_inicio"] > data["fecha_fin"]:
-            raise serializers.ValidationError(
-                "La fecha de inicio no puede ser posterior a la fecha de fin."
-            )
+        if "fecha_inicio" in data and "fecha_fin" in data:
+            if data["fecha_inicio"] > data["fecha_fin"]:
+                raise serializers.ValidationError(
+                    "La fecha de inicio no puede ser posterior a la fecha de fin."
+                )
         return data
 
 

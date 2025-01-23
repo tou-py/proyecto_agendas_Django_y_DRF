@@ -6,6 +6,9 @@ from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
+from django.utils.crypto import get_random_string
+from django.core.mail import send_mail
+from django.urls import reverse
 from .models import Especialista, Paciente, Cita
 from .serializers import (
     EspecialistaSerializer,
@@ -15,10 +18,26 @@ from .serializers import (
     PacienteRegisterSerializer,
     EspecialistaRegisterSerializer,
 )
+from twilio.rest import Client
 
 User = get_user_model()  # Obtener el modelo de usuario personalizado
 
 logger = logging.getLogger("citas")  # Obtener el logger de la aplicación
+
+
+# Función para enviar mensajes de WhatsApp
+# Crear una cuenta en Twilio y obtener el account_sid y auth_token
+def enviar_whatsapp(mensaje, numero):
+    account_sid = "tu_account_sid"
+    auth_token = "tu_auth_token"
+    client = Client(account_sid, auth_token)
+
+    message = client.messages.create(
+        body=mensaje,
+        from_="whatsapp:+14155238886",  # Número de Twilio
+        to=f"whatsapp:{numero}",
+    )
+    return message.sid
 
 
 class EspecialistaViewSet(viewsets.ModelViewSet):
@@ -135,6 +154,16 @@ class CitaViewSet(viewsets.ModelViewSet):
         cache_key = "citas_list"
         cache.delete(cache_key)  # Invalidar el caché
         serializer.save(especialista=self.request.user.especialista)
+        cita = serializer.save()
+        paciente = cita.paciente.user
+        subject = "Cita Agendada"
+        message = f"Hola {paciente.nombres}, tu cita ha sido agendada para el {cita.fecha_hora}."
+
+        # Enviar correo electrónico
+        send_mail(subject, message, "noreply@tudominio.com", [paciente.email])
+
+        # Enviar WhatsApp
+        enviar_whatsapp(message, paciente.numero_telefono)
 
     def perform_update(self, serializer):
         cache_key = "citas_list"
@@ -154,3 +183,53 @@ class CitaViewSet(viewsets.ModelViewSet):
         except Exception as e:
             logger.error(f"Error al crear cita: {str(e)}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# vistas para recuperacion de contraseña
+class PasswordResetRequestView(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+        try:
+            user = User.objects.get(email=email)
+            token = get_random_string(50)  # Genera un token único
+            user.password_reset_token = token
+            user.save()
+            # aqui tengo que recordar de colocar el dominio correcto
+            reset_url = (
+                f"http://dominio.com{reverse('password-reset-confirm')}?token={token}"
+            )
+            subject = "Restablecer contraseña"
+            message = f"Haz clic en el siguiente enlace para restablecer tu contraseña: {reset_url}"
+            # Aqui debo recordar poner el correo correcto
+            send_mail(subject, message, "correodereset@gmail.com", [user.email])
+
+            return Response(
+                {"message": "Se ha enviado un correo para restablecer la contraseña."},
+                status=status.HTTP_200_OK,
+            )
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class PasswordResetConfirmView(APIView):
+    def post(self, request):
+        token = request.data.get("token")
+        new_password = request.data.get("new_password")
+        try:
+            user = User.objects.get(password_reset_token=token)
+            user.set_password(new_password)
+            user.password_reset_token = None  # Elimina el token después de usarlo
+            user.save()
+            return Response(
+                {"message": "Contraseña restablecida correctamente."},
+                status=status.HTTP_200_OK,
+            )
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Token inválido"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+# vista para envio de notificaciones por whatsapp
